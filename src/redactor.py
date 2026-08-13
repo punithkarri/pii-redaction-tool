@@ -16,11 +16,12 @@ class PIIRedactor:
 
     def get_replacement(self, original, pii_type):
         """Get or create a deterministic replacement for a given PII value."""
-        # Normalize whitespace in original to avoid matching discrepancies
+        # Normalize whitespace and case in original to avoid matching discrepancies
         normalized = re.sub(r"\s+", " ", original.strip())
+        lookup_key = normalized.lower()
         
-        if normalized in self.mapping:
-            return self.mapping[normalized]
+        if lookup_key in self.mapping:
+            return self.mapping[lookup_key]
             
         replacement = self._generate_value(normalized, pii_type)
         
@@ -30,15 +31,26 @@ class PIIRedactor:
             replacement = self._generate_value(normalized, pii_type)
             attempts += 1
             
-        self.mapping[normalized] = replacement
+        # Match the case formatting of the original value
+        if original.isupper():
+            replacement = replacement.upper()
+        elif original.islower():
+            replacement = replacement.lower()
+            
+        self.mapping[lookup_key] = replacement
         self.generated_values.add(replacement)
         return replacement
 
     def _generate_value(self, original, pii_type):
         if pii_type == "EMAIL":
-            # Extract name part of email and create a synthetic domain
-            parts = original.split("@")
-            username = re.sub(r"[^a-zA-Z0-9\._\-]", "", parts[0]).lower()
+            # Generate a completely synthetic fake email to protect the original username.
+            # We seed Faker deterministically using the original email hash to ensure reproducibility.
+            original_hash = int(hashlib.md5(original.lower().encode('utf-8')).hexdigest(), 16)
+            local_fake = Faker()
+            local_fake.seed_instance(original_hash % (2**32))
+            username = local_fake.free_email().split('@')[0]
+            # Strip non-alphanumeric chars for cleanliness if needed
+            username = re.sub(r"[^a-zA-Z0-9\._\-]", "", username).lower()
             if not username:
                 username = "contact"
             return f"{username}@example.com"

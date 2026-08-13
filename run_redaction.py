@@ -12,4 +12,12 @@ if __name__ == "__main__":
     output_file = os.path.join(project_root, "output", "Redacted_Red_Herring_Prospectus.docx")
     
     # Run main pipeline
-    main(input_file, output_file)
+    result = main(input_file, output_file)
+    
+    # Copy to public folder for static Vercel download
+    import shutil
+    public_file = os.path.join(project_root, "public", "Redacted_Red_Herring_Prospectus.docx")
+    os.makedirs(os.path.dirname(public_file), exist_ok=True)
+    shutil.copy(output_file, public_file)
+    print(f"Copied redacted document to static website: {public_file}")
+

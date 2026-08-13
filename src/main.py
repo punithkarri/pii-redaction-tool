@@ -83,15 +83,16 @@ def main(input_file, output_file):
     print("\n--- Running Post-Redaction Verification ---")
     redacted_text = extract_all_text(output_file)
     
-    # Search for all original PII values in the redacted document text
+    # Search for all original PII values in the redacted document text (case-insensitive)
     leaks = []
     mapping = processor.redactor.mapping
+    redacted_text_lower = redacted_text.lower()
     for original_pii, replacement in mapping.items():
         # Check if the original PII text exists in the redacted document text
         # Ignore extremely short strings (less than 4 chars) to prevent false alerts on single letters
         if len(original_pii) < 4:
             continue
-        if original_pii in redacted_text:
+        if original_pii.lower() in redacted_text_lower:
             leaks.append((original_pii, replacement))
             
     # Run PII Detector again on the redacted text to spot uncaught PII

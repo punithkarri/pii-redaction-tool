@@ -65,6 +65,16 @@ class DocumentProcessor:
             "detections_by_category": {}
         }
 
+    def _get_all_tables(self, parent):
+        """Recursively gather all tables, including nested tables inside cells."""
+        tables = []
+        for table in parent.tables:
+            tables.append(table)
+            for row in table.rows:
+                for cell in row.cells:
+                    tables.extend(self._get_all_tables(cell))
+        return tables
+
     def process(self):
         """Load, process, redact, and save the DOCX document."""
         print(f"Loading document: {self.input_path}")
@@ -73,8 +83,9 @@ class DocumentProcessor:
         # 1. Process Main Stories (Paragraphs)
         self.process_paragraphs(doc.paragraphs)
         
-        # 2. Process Tables
-        self.process_tables(doc.tables)
+        # 2. Process Tables (gather all top-level and nested tables)
+        all_tables = self._get_all_tables(doc)
+        self.process_tables(all_tables)
         
         # 3. Process Headers & Footers in all sections (deduplicated to prevent linked double-processing)
         processed_headers = set()
@@ -85,12 +96,12 @@ class DocumentProcessor:
                 processed_headers.add(section.header)
                 self.stats["headers_processed"] += 1
                 self.process_paragraphs(section.header.paragraphs)
-                self.process_tables(section.header.tables)
+                self.process_tables(self._get_all_tables(section.header))
             if section.footer and section.footer not in processed_footers:
                 processed_footers.add(section.footer)
                 self.stats["footers_processed"] += 1
                 self.process_paragraphs(section.footer.paragraphs)
-                self.process_tables(section.footer.tables)
+                self.process_tables(self._get_all_tables(section.footer))
                 
         print(f"Saving redacted document to: {self.output_path}")
         doc.save(self.output_path)

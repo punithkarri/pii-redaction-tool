@@ -24,7 +24,23 @@ KNOWN_NAMES = {
     "Anand Soni",
     "Ashish M P",
     "Ashish M. P.",
-    "Shanti Gopalkrishnan"
+    "Shanti Gopalkrishnan",
+    "Kushal Hegde",
+    "Pushpa Hegde",
+    "Rajesh Hegde",
+    "Rohit Hegde",
+    "Karunakar Hegde",
+    "Jayaram Shetty",
+    "Narayana B. Shetty",
+    "DM Shetty",
+    "Gopal BO",
+    "Karunakar Bhandary",
+    "SA Shetty",
+    "Vijay Hegde",
+    "Karunakar N. Bhandary",
+    "Narayna B. Shetty",
+    "Jayaram N. Shetty",
+    "Karunakar Hegde HUF"
 }
 
 # Known companies discovered in the KSH International Limited RHP
@@ -58,7 +74,16 @@ KNOWN_COMPANIES = {
     "Everest Family Trust",
     "Makalu Family Trust",
     "Broad Family Trust",
-    "Annapurna Family Trust"
+    "Annapurna Family Trust",
+    "Kanchenjunga Family Trust",
+    "Family Trust",
+    "Cloud Services",
+    "Kushal Motors",
+    "Parents Branch",
+    "Rajesh Branch",
+    "Sangeeta Branch",
+    "Rakhi Branch",
+    "Rohit Branch"
 }
 
 # Terminology blacklist - these should NEVER be treated as personal names
@@ -215,12 +240,12 @@ class PIIDetector:
 
         # Name Title Regex: matches names with common titles (Shri, Smt, Mr, Ms, Mrs, Dr, Late)
         self.name_title_regex = re.compile(
-            r"\b(?:Mr\.|Ms\.|Mrs\.|Dr\.|Shri|Smt\.|Late|Mr|Ms|Mrs|Smt)\s+([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){1,3})\b"
+            r"\b(?:Mr\.|Ms\.|Mrs\.|Dr\.|Shri|Smt\.|Late|Mr|Ms|Mrs|Smt|MR\.|MS\.|MRS\.|DR\.|SHRI|SMT\.|LATE|MR|MS|MRS|SMT)\s+([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){1,3})\b"
         )
         
         # Company Suffix Regex
         self.company_regex = re.compile(
-            r"\b[A-Z][a-zA-Z0-9]*(?:\s+[A-Z][a-zA-Z0-9]*)*\s+(?:Limited|Private Limited|LLP|Corporation|Inc\.|Ltd\.|Pvt\.\s*Ltd\.|Industries|Securities|Bank|Foundation|Trust|Services|Technologies|Associates)\b"
+            r"\b[A-Z][a-zA-Z0-9]*(?:\s+[A-Z][a-zA-Z0-9]*)*\s+(?:Limited|Private Limited|LLP|Corporation|Inc\.|Ltd\.|Pvt\.\s*Ltd\.|Industries|Securities|Bank|Foundation|Trust|Services|Technologies|Associates|LIMITED|PRIVATE LIMITED|LLP|CORPORATION|INC\.|LTD\.|PVT\.\s*LTD\.|INDUSTRIES|SECURITIES|BANK|FOUNDATION|TRUST|SERVICES|TECHNOLOGIES|ASSOCIATES)\b"
         )
 
         # Address indicator keywords
@@ -380,9 +405,9 @@ class PIIDetector:
         matches = []
         text_len = len(text)
         
-        # 1. Direct Known Names search (exact and case-sensitive)
+        # 1. Direct Known Names search (case-insensitive)
         for name in KNOWN_NAMES:
-            for m in re.finditer(r"\b" + re.escape(name) + r"\b", text):
+            for m in re.finditer(r"\b" + re.escape(name) + r"\b", text, re.IGNORECASE):
                 matches.append({
                     "type": "FULL_NAME",
                     "original": m.group(0),
@@ -446,9 +471,9 @@ class PIIDetector:
         """Detect company names using known companies and suffix-based patterns, avoiding blacklists."""
         matches = []
         
-        # 1. Known Companies search
+        # 1. Known Companies search (case-insensitive)
         for company in KNOWN_COMPANIES:
-            for m in re.finditer(r"\b" + re.escape(company) + r"\b", text):
+            for m in re.finditer(r"\b" + re.escape(company) + r"\b", text, re.IGNORECASE):
                 matches.append({
                     "type": "COMPANY",
                     "original": m.group(0),
