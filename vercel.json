@@ -1,7 +1,8 @@
 {
-  "version": 2,
   "cleanUrls": true,
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/public/$1" }
+  "routes": [
+    { "src": "/", "dest": "/public/index.html" },
+    { "src": "/evaluation.html", "dest": "/public/evaluation.html" },
+    { "src": "/Redacted_Red_Herring_Prospectus.docx", "dest": "/public/Redacted_Red_Herring_Prospectus.docx" }
   ]
 }
