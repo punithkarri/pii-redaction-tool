@@ -103,9 +103,60 @@ class DocumentProcessor:
                 self.process_paragraphs(section.footer.paragraphs)
                 self.process_tables(self._get_all_tables(section.footer))
                 
+        # 4. XML-Level Package Sanitization (Relationships and all text nodes)
+        self.sanitize_xml_package(doc)
+                
         print(f"Saving redacted document to: {self.output_path}")
         doc.save(self.output_path)
         return self.stats
+
+    def sanitize_xml_package(self, doc):
+        """Sanitize relationships and raw XML elements in all package parts efficiently."""
+        mapping = self.redactor.mapping
+        
+        # Sort keys by length descending to prevent substring collisions
+        sorted_keys = sorted(mapping.keys(), key=len, reverse=True)
+        
+        # Precompile patterns to avoid recompiling in loops
+        compiled_patterns = []
+        for original in sorted_keys:
+            if len(original) >= 4:
+                pattern = re.compile(re.escape(original), re.IGNORECASE)
+                compiled_patterns.append((original.lower(), pattern, mapping[original]))
+                
+        # 1. Update relationships
+        for part in doc.part.package.parts:
+            if hasattr(part, 'rels'):
+                for rel_id, rel in part.rels.items():
+                    if rel.is_external:
+                        url = rel.target_ref
+                        updated_url = url
+                        url_lower = url.lower()
+                        # Quick check: only search if there is a potential match
+                        if any(k in url_lower for k, _, _ in compiled_patterns):
+                            for _, pattern, replacement in compiled_patterns:
+                                updated_url = pattern.sub(replacement, updated_url)
+                        if updated_url != url:
+                            rel.target_ref = updated_url
+                            
+        # 2. Update XML text nodes
+        for part in doc.part.package.parts:
+            # Main doc, headers, footers, footnotes, endnotes, comments
+            element = getattr(part, '_element', None)
+            if element is None:
+                element = getattr(part, 'element', None)
+            if element is not None:
+                for el in element.iter():
+                    if el.text:
+                        text = el.text
+                        text_lower = text.lower()
+                        # Quick check: only run regex replacements if there is a potential match
+                        if any(k in text_lower for k, _, _ in compiled_patterns):
+                            updated_text = text
+                            for _, pattern, replacement in compiled_patterns:
+                                updated_text = pattern.sub(replacement, updated_text)
+                            if updated_text != text:
+                                el.text = updated_text
 
     def process_paragraphs(self, paragraphs):
         """Redact a list of paragraphs using a single-replacement loop to prevent offset shifts."""
