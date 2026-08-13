@@ -2,9 +2,9 @@
 
 ### 1. Repository & Deployment Links
 * **GitHub Repository**: [https://github.com/punithkarri/pii-redaction-tool](https://github.com/punithkarri/pii-redaction-tool)
-* **Vercel Production Site**: *[To be generated upon running deployment below]*
-* **Evaluation Strategy Page**: `https://<your-vercel-domain>/evaluation.html`
-* **Redacted DOCX Download**: `https://<your-vercel-domain>/Redacted_Red_Herring_Prospectus.docx`
+* **Vercel Production Site**: [https://pii-redaction-tool-7gij.vercel.app/](https://pii-redaction-tool-7gij.vercel.app/)
+* **Evaluation Strategy Page**: [https://pii-redaction-tool-7gij.vercel.app/evaluation.html](https://pii-redaction-tool-7gij.vercel.app/evaluation.html)
+* **Redacted DOCX Download**: [https://pii-redaction-tool-7gij.vercel.app/Redacted_Red_Herring_Prospectus.docx](https://pii-redaction-tool-7gij.vercel.app/Redacted_Red_Herring_Prospectus.docx)
 
 ---
 
