@@ -1,0 +1,28 @@
+# Python environment and caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.venv/
+venv/
+ENV/
+env/
+
+# Sensitive PII inputs
+input/
+*Red Herring Prospectus.docx
+~$*
+
+# Ground truth with real PII
+evaluation/ground_truth.json
+
+# Local output logs and verification summaries
+output/verification_summary.txt
+*.log
+
+# Vercel deployment caches and local environment settings
+.vercel/
+.env
+.env.local
+.env.*.local
+node_modules/

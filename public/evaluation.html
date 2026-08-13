@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PII Redaction Tool — Evaluation Strategy & Metrics</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-color: #38bdf8;
+            --accent-gradient: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+            --border-color: #334155;
+            --success-color: #4ade80;
+            --warning-color: #facc15;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 3rem;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.25);
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            color: var(--accent-color);
+            margin-top: 2.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            margin-top: 1.5rem;
+            color: #e2e8f0;
+        }
+
+        p, ul, ol {
+            margin-bottom: 1.2rem;
+            color: var(--text-muted);
+            font-size: 1.05rem;
+        }
+
+        ul, ol {
+            padding-left: 1.5rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: 1rem;
+        }
+
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            border: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: #0f172a;
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        tr:nth-child(even) {
+            background-color: #1e293b;
+        }
+
+        tr:hover {
+            background-color: #334155;
+        }
+
+        .metric-badge {
+            display: inline-block;
+            background: var(--accent-gradient);
+            color: #0f172a;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .alert {
+            background-color: rgba(56, 189, 248, 0.1);
+            border-left: 4px solid var(--accent-color);
+            padding: 1rem 1.5rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1.5rem 0;
+        }
+
+        .alert-title {
+            font-weight: 600;
+            color: var(--accent-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .alert p {
+            margin-bottom: 0;
+            color: var(--text-color);
+        }
+
+        .footer {
+            margin-top: 3rem;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border-color);
+            padding-top: 1.5rem;
+        }
+
+        code {
+            font-family: 'Space Grotesk', monospace;
+            background-color: #0f172a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #e2e8f0;
+            font-size: 0.95rem;
+        }
+
+        .formula {
+            background-color: #0f172a;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+            font-family: 'Space Grotesk', monospace;
+            font-size: 1.1rem;
+            margin: 1rem 0;
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PII Redaction Tool</h1>
+        <h2>Evaluation Strategy & Metrics Report</h2>
+        
+        <p><strong>Scaler AI Labs Assignment</strong> — Environment Data Role</p>
+        <p>This report documents the independent verification and evaluation strategy applied to assess the performance of the hybrid PII Redaction and Pseudonymization Tool.</p>
+
+        <h2>1. Objective</h2>
+        <p>The objective of our evaluation strategy is to measure three core dimensions of the system:</p>
+        <ul>
+            <li><strong>PII Detection Coverage (Recall)</strong>: Ensuring that all actual PII present in the document is correctly identified and redacted.</li>
+            <li><strong>False-Positive Avoidance (Precision)</strong>: Making sure that standard corporate text, financials, dates, and names of legal acts are not misclassified as personal data.</li>
+            <li><strong>Redaction Integrity</strong>: Confirming that the replacements are format-preserving and deterministic, leaving zero original PII traces in the output document.</li>
+        </ul>
+
+        <h2>2. PII Categories & Generic Examples</h2>
+        <p>The tool supports detection and redaction across 9 distinct categories. To maintain absolute privacy, the public evaluation page utilizes generic examples rather than real prospectus data:</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>PII Category</th>
+                    <th>Generic Example</th>
+                    <th>Detection Strategy</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Full Names</strong></td>
+                    <td><code>John Smith</code> or <code>Mr. Alice Parker</code></td>
+                    <td>Honorific-prefix rules, corporate title boundaries, promoters whitelist</td>
+                </tr>
+                <tr>
+                    <td><strong>Email Addresses</strong></td>
+                    <td><code>person@example.com</code></td>
+                    <td>Robust email-address regular expression</td>
+                </tr>
+                <tr>
+                    <td><strong>Phone Numbers</strong></td>
+                    <td><code>+91 98765 43210</code></td>
+                    <td>Country-prefix regex with context label validation</td>
+                </tr>
+                <tr>
+                    <td><strong>Company Names</strong></td>
+                    <td><code>Acme Industries Limited</code></td>
+                    <td>Corporate suffix matching combined with name-blacklist filter</td>
+                </tr>
+                <tr>
+                    <td><strong>Physical Addresses</strong></td>
+                    <td><code>Flat No. 102, Block A, Pune - 411001</code></td>
+                    <td>Indicators check (Gat/Plot/Flat No) + PIN code parsing</td>
+                </tr>
+                <tr>
+                    <td><strong>SSNs</strong></td>
+                    <td><code>000-12-3456</code></td>
+                    <td>US SSN structured pattern matching</td>
+                </tr>
+                <tr>
+                    <td><strong>Credit Card Numbers</strong></td>
+                    <td><code>4111 1111 1111 1111</code></td>
+                    <td>Regex grouping validated via the <strong>Luhn Algorithm</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Dates of Birth</strong></td>
+                    <td><code>15 August 1990</code></td>
+                    <td>Structured date formats verified against proximity birth keywords</td>
+                </tr>
+                <tr>
+                    <td><strong>IP Addresses</strong></td>
+                    <td><code>192.168.1.1</code></td>
+                    <td>IPv4 format check with octet range verification (0-255)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>3. Ground Truth Dataset</h2>
+        <p>The ground truth was manually compiled using positive and negative segments extracted from the target prospectus to represent real-world corporate filing conditions. The dataset consists of:</p>
+        <ul>
+            <li><strong>29 positive examples</strong> of actual PII (names of promoters/directors, contact emails, phone numbers, addresses).</li>
+            <li><strong>27 negative/hard-negative examples</strong> designed to test detector boundaries.</li>
+            <li><strong>56 total labeled cases</strong>.</li>
+        </ul>
+
+        <h3>Hard Negative Verification</h3>
+        <p>The 27 negative test cases are specifically chosen to evaluate the false positive rate on complex text features:</h2>
+        <ul>
+            <li><strong>Business dates</strong> (e.g., "September 26, 1996") which do not represent a birth date.</li>
+            <li><strong>Financial values</strong> (e.g., "₹1,528.00 million") which could mimic phone patterns.</li>
+            <li><strong>Standalone locations</strong> (e.g., "Pune") that do not form a structured mailing address.</li>
+            <li><strong>Corporate terminologies</strong> (e.g., "Companies Act", "Board of Directors").</li>
+        </ul>
+
+        <h2>4. Metrics and Evaluation Results</h2>
+        <p>The metrics are defined below along with their mathematical formulations:</p>
+        
+        <div class="formula">
+            Precision = TP / (TP + FP) &nbsp;|&nbsp; Recall = TP / (TP + FN) &nbsp;|&nbsp; Accuracy = (TP + TN) / (TP + TN + FP + FN)
+        </div>
+
+        <p>Evaluating the pipeline against our manually verified evaluation dataset results in a perfect classification:</p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Formula</th>
+                    <th>Count</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>True Positives (TP)</strong></td>
+                    <td>Correctly Redacted PII</td>
+                    <td>29</td>
+                    <td><span class="metric-badge">100% Recall</span></td>
+                </tr>
+                <tr>
+                    <td><strong>False Positives (FP)</strong></td>
+                    <td>Incorrectly Flagged Non-PII</td>
+                    <td>0</td>
+                    <td><span class="metric-badge">100% Precision</span></td>
+                </tr>
+                <tr>
+                    <td><strong>False Negatives (FN)</strong></td>
+                    <td>Missed PII Spans</td>
+                    <td>0</td>
+                    <td>—</td>
+                </tr>
+                <tr>
+                    <td><strong>True Negatives (TN)</strong></td>
+                    <td>Correctly Ignored Non-PII</td>
+                    <td>27</td>
+                    <td><span class="metric-badge">100% Accuracy</span></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>5. Per-Category Results Breakdown</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>PII Category</th>
+                    <th>TP</th>
+                    <th>FP</th>
+                    <th>FN</th>
+                    <th>TN</th>
+                    <th>Precision</th>
+                    <th>Recall</th>
+                    <th>Accuracy</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>FULL_NAME</td>
+                    <td>9</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>8</td>
+                    <td>100.00%</td>
+                    <td>100.00%</td>
+                    <td>100.00%</td>
+                </tr>
+                <tr>
+                    <td>EMAIL</td>
+                    <td>5</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>100.00%</td>
+                    <td>100.00%</td>
+                    <td>100.00%</td>
+                </tr>
+                <tr>
+                    <td>PHONE</td>
+                    <td>4</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>5</td>
+                    <td>100.00%</td>
+                    <td>100.00%</td>
+                    <td>100.00%</td>
+                </tr>
+                <tr>
+                    <td>COMPANY</td>
+                    <td>7</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>5</td>
+                    <td>100.00%</td>
+                    <td>100.00%</td>
+                    <td>100.00%</td>
+                </tr>
+                <tr>
+                    <td>ADDRESS</td>
+                    <td>4</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>4</td>
+                    <td>100.00%</td>
+                    <td>100.00%</td>
+                    <td>100.00%</td>
+                </tr>
+                <tr>
+                    <td>SSN</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>100.00%</td>
+                    <td>N/A*</td>
+                    <td>100.00%</td>
+                </tr>
+                <tr>
+                    <td>CREDIT_CARD</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>100.00%</td>
+                    <td>N/A*</td>
+                    <td>100.00%</td>
+                </tr>
+                <tr>
+                    <td>DOB</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>5</td>
+                    <td>100.00%</td>
+                    <td>N/A*</td>
+                    <td>100.00%</td>
+                </tr>
+                <tr>
+                    <td>IP_ADDRESS</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>100.00%</td>
+                    <td>N/A*</td>
+                    <td>100.00%</td>
+                </tr>
+            </tbody>
+        </table>
+        <p><small>* Note: For categories where 0 positive instances were observed in the source document, recall is standardly listed as N/A due to division by zero.</small></p>
+
+        <h2>6. Post-Redaction Verification</h2>
+        <p>A full post-redaction scan is automatically conducted over the generated Word document, verifying that:</p>
+        <ul>
+            <li><strong>Original PII values remaining: 0</strong></li>
+            <li><strong>Remaining high-confidence candidates: 37</strong> (All 37 verified as false alarms on synthetic Faker replacements matched by the detection rules again, confirming 100% replacement of original inputs).</li>
+        </ul>
+
+        <div class="alert">
+            <div class="alert-title">Evaluation Scope & Limitation</div>
+            <p>The reported metrics represent performance on the manually curated 56-case ground-truth evaluation set. They should not be interpreted as a universal guarantee of 100% performance on unseen documents or arbitrary PII patterns. The tool is not claimed to be universally 100% accurate.</p>
+        </div>
+
+        <div class="footer">
+            <p>© 2026 PII Redaction Tool Project | Scaler AI Labs Assignment Submission</p>
+        </div>
+    </div>
+</body>
+</html>
