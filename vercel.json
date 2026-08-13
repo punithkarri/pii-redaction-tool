@@ -1,8 +1,0 @@
-{
-  "cleanUrls": true,
-  "routes": [
-    { "src": "/", "dest": "/public/index.html" },
-    { "src": "/evaluation.html", "dest": "/public/evaluation.html" },
-    { "src": "/Redacted_Red_Herring_Prospectus.docx", "dest": "/public/Redacted_Red_Herring_Prospectus.docx" }
-  ]
-}
